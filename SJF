@@ -1,0 +1,49 @@
+class SJFScheduler:
+
+    def _init_(self, arrival_time, burst_time):
+        self.total_processes = len(arrival_time)
+
+        self.proc = []
+
+        for i in range(self.total_processes):
+
+            self.proc.append([arrival_time[i], burst_time[i], i + 1])
+        
+        self.proc = sorted(self.proc, key=lambda x: (x[0], x[1]))
+        self.waiting_time = [0] * self.total_processes
+        self.turnaround_time = [0] * self.total_processes
+        self.start_time = [0] * self.total_processes
+        self.complete_time = [0] * self.total_processes
+
+    def schedule(self):
+
+        service = [0] * self.total_processes
+
+        service[0] = self.proc[0][0]
+
+        self.waiting_time[0] = 0
+
+        for i in range(1, self.total_processes):
+
+            service[i] = service[i - 1] + self.proc[i - 1][1]
+            self.waiting_time[i] = service[i] - self.proc[i][0]
+            if self.waiting_time[i] < 0:
+                self.waiting_time[i] = 0
+
+        for i in range(self.total_processes):
+            self.turnaround_time[i] = self.proc[i][1] + self.waiting_time[i]
+
+        self.start_time[0] = self.proc[0][0]
+        self.complete_time[0] = self.start_time[0] + self.turnaround_time[0]
+
+        for i in range(1, self.total_processes):
+            self.start_time[i] = self.complete_time[i - 1]
+            self.complete_time[i] = self.start_time[i] + self.turnaround_time[i]
+
+        process_data = []
+        for i in range(self.total_processes):
+            process_data.append([self.proc[i][2], self.start_time[i], self.complete_time[i], self.turnaround_time[i], self.waiting_time[i]])
+
+        df = pd.DataFrame(process_data, columns=["Process_no", "Start_time", "Complete_time", "Turn_Around_Time", "Waiting_Time"])
+        avg_tat = sum(self.turnaround_time) / self.total_processes
+        avg_waiting_time = sum(self.waiting_time) / self.total_processes
